@@ -71,23 +71,23 @@ clean:
 distclean:
 	rm -rf hping3 *.o byteorder byteorder.h systype.h Makefile libars.a .depend
 
-install: hping3
+install: hping3-static
 	[ -d $(DESTDIR)/usr ] || \
 		(mkdir -p $(DESTDIR)/usr; chmod 755 $(DESTDIR)/usr)
 	[ -d $(DESTDIR)/usr/bin ] || \
 		(mkdir -p $(DESTDIR)/usr/bin; chmod 755 $(DESTDIR)/usr/bin)
 	[ -d $(DESTDIR)/usr/share ] || \
 		(mkdir -p $(DESTDIR)/usr/share; chmod 755 $(DESTDIR)/usr/share)
-	[-d $(DESTDIR)/usr/share/man ] || \
+	[ -d $(DESTDIR)/usr/share/man ] || \
 		(mkdir -p $(DESTDIR)/usr/share/man; chmod 755 $(DESTDIR)/usr/share/man)
-	[-d $(DESTDIR)/usr/share/man/man8 ] || \
+	[ -d $(DESTDIR)/usr/share/man/man8 ] || \
 		(mkdir -p $(DESTDIR)/usr/share/man/man8; chmod 755 $(DESTDIR)/usr/share/man/man8)
 
 	
 	cp -f hping3-static $(DESTDIR)/usr/bin/hping3
 	chmod 755 $(DESTDIR)/usr/bin/hping3
 	cp ./docs/hping3.8 $(DESTDIR)/usr/share/man/man8
-	chmod 644 $(DESTDIR)/usr/share/man/man8
+	chmod 644 $(DESTDIR)/usr/share/man/man8/hping3.8
 
 
 
