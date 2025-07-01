@@ -6,16 +6,16 @@
 # $date: Sun Jul 25 17:56:15 MET DST 1999$ 
 # $rev: 3$ 
 
-CC= gcc
-AR=/usr/bin/ar
-RANLIB=/usr/bin/ranlib
-CCOPT= -O2 -Wall @PCAP_INCLUDE@ @TCL_INC@ @USE_TCL@
+CC= arm-rockchip830-linux-uclibcgnueabihf-gcc
+AR= arm-rockchip830-linux-uclibcgnueabihf-ar
+RANLIB= arm-rockchip830-linux-uclibcgnueabihf-ranlib
+CCOPT= -O2 -Wall  -I../out/tcl/usr/include -I../out/libpcap/usr/include -DUSE_TCL -L../out/libpcap/usr/lib -L../out/tcl/usr/lib
 DEBUG= -g
 #uncomment the following if you need libpcap based build under linux
 #(not raccomanded)
 COMPILE_TIME=
-INSTALL_MANPATH=@MANPATH@
-@PCAP@
+INSTALL_MANPATH=
+PCAP=-lpcap
 
 ARSOBJ = ars.o apd.o split.o rapd.o
 
@@ -50,14 +50,14 @@ libars.a: $(ARSOBJ)
 	$(RANLIB) $@
 
 hping3: byteorder.h $(OBJ)
-	$(CC) -o hping3 $(CCOPT) $(DEBUG) $(OBJ) -L/usr/local/lib $(PCAP) @SOLARISLIB@ @TCL_LIB@
+	$(CC) -o hping3 $(CCOPT) $(DEBUG) $(OBJ) -L/usr/local/lib $(PCAP)  -ltcl8.6 -lm -lpthread
 	@echo
 	./hping3 -v
 	@echo "use \`make strip' to strip hping3 binary"
 	@echo "use \`make install' to install hping3"
 
 hping3-static: byteorder.h $(OBJ)
-	$(CC) -static -o hping3-static $(CCOPT) $(DEBUG) $(OBJ) -L/usr/local/lib $(PCAP) @SOLARISLIB@ @TCL_LIB@ -ldl
+	$(CC) -static -o hping3-static $(CCOPT) $(DEBUG) $(OBJ) -L/usr/local/lib $(PCAP) ../out/tcl/usr/lib/libtcl8.6-nolibc.a -lm -lpthread -ldl
 
 byteorder.h:
 	./configure
@@ -72,17 +72,24 @@ distclean:
 	rm -rf hping3 *.o byteorder byteorder.h systype.h Makefile libars.a .depend
 
 install: hping3
-	cp -f hping3 /usr/sbin/
-	chmod 755 /usr/sbin/hping3
-	ln -s /usr/sbin/hping3 /usr/sbin/hping
-	ln -s /usr/sbin/hping3 /usr/sbin/hping2
-	@if [ -d ${INSTALL_MANPATH}/man8 ]; then \
-		cp ./docs/hping3.8 ${INSTALL_MANPATH}/man8; \
-		chmod 644 ${INSTALL_MANPATH}/man8/hping3.8; \
-	else \
-		echo "@@@@@@ WARNING @@@@@@"; \
-		echo "Can't install the man page: ${INSTALL_MANPATH}/man8 does not exist"; \
-	fi
+	[ -d $(DESTDIR)/usr ] || \
+		(mkdir -p $(DESTDIR)/usr; chmod 755 $(DESTDIR)/usr)
+	[ -d $(DESTDIR)/usr/bin ] || \
+		(mkdir -p $(DESTDIR)/usr/bin; chmod 755 $(DESTDIR)/usr/bin)
+	[ -d $(DESTDIR)/usr/share ] || \
+		(mkdir -p $(DESTDIR)/usr/share; chmod 755 $(DESTDIR)/usr/share)
+	[-d $(DESTDIR)/usr/share/man ] || \
+		(mkdir -p $(DESTDIR)/usr/share/man; chmod 755 $(DESTDIR)/usr/share/man)
+	[-d $(DESTDIR)/usr/share/man/man8 ] || \
+		(mkdir -p $(DESTDIR)/usr/share/man/man8; chmod 755 $(DESTDIR)/usr/share/man/man8)
+
+	
+	cp -f hping3-static $(DESTDIR)/usr/bin/hping3
+	chmod 755 $(DESTDIR)/usr/bin/hping3
+	cp ./docs/hping3.8 $(DESTDIR)/usr/share/man/man8
+	chmod 644 $(DESTDIR)/usr/share/man/man8
+
+
 
 strip: hping3
 	@ls -l ./hping3
