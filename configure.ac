@@ -23,18 +23,26 @@ AC_ARG_ENABLE([tcl],
 
 
 AS_IF([test "x$enable_tcl" = "xyes"], [
-  AC_MSG_NOTICE([Checking for Tcl...])
+  AC_MSG_NOTICE([Checking for Tcl (8.0–8.6)...])
 
   have_tcl_lib=no
   have_tcl_hdr=no
+  TCL_LIBS=""
+  TCL_VERSION_DETECTED=""
+  USE_TCL_CPPFLAGS=""
 
-  AC_CHECK_LIB([tcl8.6], [Tcl_Init], [
-    have_tcl_lib=yes
-    TCL_LIBS="-ltcl8.6 -lm -lpthread"
-    AC_SUBST([TCL_VERSION_DETECTED], ["8.6"])
-  ], [
-    AC_MSG_WARN([libtcl8.6 not found; Tcl scripting disabled])
-  ])
+  for ver in 8.6 8.5 8.4 8.3 8.2 8.1 8.0; do
+    AC_MSG_CHECKING([for Tcl version $ver])
+    AC_CHECK_LIB([tcl$ver], [Tcl_Init], [
+      TCL_LIBS="-ltcl$ver -lm -lpthread"
+      TCL_VERSION_DETECTED="$ver"
+      have_tcl_lib=yes
+      AC_MSG_RESULT([yes])
+      break
+    ], [
+      AC_MSG_RESULT([no])
+    ])
+  done
 
   AC_CHECK_HEADER([tcl.h], [have_tcl_hdr=yes], [
     AC_MSG_WARN([tcl.h not found; Tcl scripting disabled])
@@ -44,6 +52,7 @@ AS_IF([test "x$enable_tcl" = "xyes"], [
     AC_DEFINE([USE_TCL], [1], [Define if using Tcl scripting])
     USE_TCL_CPPFLAGS="-DUSE_TCL"
   ], [
+    AC_MSG_WARN([Tcl scripting support disabled])
     enable_tcl=no
     TCL_LIBS=""
     USE_TCL_CPPFLAGS=""
@@ -51,12 +60,14 @@ AS_IF([test "x$enable_tcl" = "xyes"], [
   ])
 ])
 
-
-
-
-
 AC_SUBST([TCL_LIBS])
 AC_SUBST([USE_TCL_CPPFLAGS])
+AC_SUBST([TCL_VERSION_DETECTED])
+
+
+
+
+
 
 # Endianness
 # Endianness

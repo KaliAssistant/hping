@@ -15,10 +15,12 @@ config.h.in
 config.log
 config.status
 config.sub
+configure
 depcomp
 install-sh
 libtool
 ltmain.sh
 m4/
 missing
+Makefile.in
 stamp-h1
