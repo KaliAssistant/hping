@@ -51,7 +51,7 @@ EXTRA_DIST = \
 
 
 distclean-local:
-	rm -f configure aclocal.m4 Makefile.in config.h.in autoreconf.log
+	rm -f configure aclocal.m4 Makefile.in config.h.in  config.h.in~ autoreconf.log
 	rm -f config.guess config.sub ltmain.sh missing install-sh depcomp configure~ compile
 	rm -rf autom4te.cache m4
 
