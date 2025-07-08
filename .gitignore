@@ -3,9 +3,6 @@
 hping3
 hping3-static
 *.swp
-<<<<<<< HEAD
-byteorder
-=======
 Makefile
 
 *~
@@ -28,4 +25,3 @@ m4/
 missing
 Makefile.in
 stamp-h1
->>>>>>> dev
