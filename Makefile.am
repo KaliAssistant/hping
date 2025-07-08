@@ -9,7 +9,7 @@ bin_PROGRAMS = hping3
 # AM_LDFLAGS is for linker flags
 AM_CFLAGS = -O3 -Wall $(DEBUG) # DEBUG variable is not defined anywhere, usually handled by configure.ac --enable-debug
 AM_CPPFLAGS = $(USE_TCL_CPPFLAGS)
-AM_LDFLAGS = 
+AM_LDFLAGS =
 ACLOCAL_AMFLAGS= -I m4
 
 
