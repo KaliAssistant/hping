@@ -12,37 +12,88 @@ AC_PROG_INSTALL
 AC_PROG_AR
 LT_INIT
 
-# Dependencies
-AC_CHECK_LIB([pcap], [pcap_open_live], [], [AC_MSG_ERROR([libpcap not found])])
+# ----------- libpcap support -----------
 
-# Optional: Tcl scripting support
+AC_ARG_WITH([libpcap],
+  [AS_HELP_STRING([--with-libpcap=PATH], [Specify root path to libpcap (contains include/ and lib/)])],
+  [libpcap_path="$withval"],
+  [libpcap_path=""]
+)
+
+AS_IF([test -z "$libpcap_path"], [
+  AC_MSG_ERROR([--with-libpcap=PATH is required when compiling.])
+])
+
+AC_MSG_NOTICE([Checking for libpcap...])
+pcap_inc_dir="$libpcap_path/include"
+pcap_lib_dir="$libpcap_path/lib"
+pcap_static="$pcap_lib_dir/libpcap.a"
+
+CPPFLAGS="$CPPFLAGS -I$pcap_inc_dir"
+LDFLAGS="$LDFLAGS -L$pcap_lib_dir"
+
+AS_IF([test "x$enable_static" = "xyes" && test -f "$pcap_static"], [
+  AC_MSG_NOTICE([Using static libpcap from $pcap_lib_dir])
+  LIBS="$pcap_static -ldl"
+], [
+  AC_CHECK_LIB([pcap], [pcap_open_live], [], [
+    AC_MSG_ERROR([libpcap not found in $libpcap_path])
+  ])
+])
+
+# ----------- Tcl scripting support -----------
+
 AC_ARG_ENABLE([tcl],
   [AS_HELP_STRING([--disable-tcl], [Disable Tcl scripting support])],
   [],
-  [enable_tcl=yes])
+  [enable_tcl=yes]
+)
 
+AC_ARG_WITH([libtcl],
+  [AS_HELP_STRING([--with-libtcl=PATH], [Specify root path to Tcl (contains include/ and lib/)])],
+  [libtcl_path="$withval"],
+  [libtcl_path=""]
+)
+
+AS_IF([test "x$enable_tcl" = "xyes"], [
+  AS_IF([test -z "$libtcl_path"], [
+    AC_MSG_ERROR([--with-libtcl=PATH is required when Tcl scripting is enabled and compiling.])
+  ])
+])
+
+tcl_inc_dir="$libtcl_path/include"
+tcl_lib_dir="$libtcl_path/lib"
+CPPFLAGS="$CPPFLAGS -I$tcl_inc_dir"
+LDFLAGS="$LDFLAGS -L$tcl_lib_dir"
 
 AS_IF([test "x$enable_tcl" = "xyes"], [
   AC_MSG_NOTICE([Checking for Tcl (8.0–8.6)...])
-
   have_tcl_lib=no
   have_tcl_hdr=no
-  TCL_LIBS=""
-  TCL_VERSION_DETECTED=""
-  USE_TCL_CPPFLAGS=""
+  TCL_VERSIONS="8.6 8.5 8.4 8.3 8.2 8.1 8.0"
 
-  for ver in 8.6 8.5 8.4 8.3 8.2 8.1 8.0; do
-    AC_MSG_CHECKING([for Tcl version $ver])
-    AC_CHECK_LIB([tcl$ver], [Tcl_Init], [
-      TCL_LIBS="-ltcl$ver -lm -lpthread"
-      TCL_VERSION_DETECTED="$ver"
-      have_tcl_lib=yes
-      AC_MSG_RESULT([yes])
-      break
-    ], [
-      AC_MSG_RESULT([no])
-    ])
-  done
+  if test "x$enable_static" = "xyes"; then
+    for ver in $TCL_VERSIONS; do
+      tcl_static="$tcl_lib_dir/libtcl${ver}.a"
+      if test -f "$tcl_static"; then
+        have_tcl_lib=yes
+        TCL_LIBS="$tcl_static -lm -lpthread"
+        TCL_VERSION_DETECTED="$ver"
+        break
+      fi
+    done
+  fi
+
+  if test "x$have_tcl_lib" = "xno"; then
+    for ver in $TCL_VERSIONS; do
+      AC_CHECK_LIB([tcl$ver], [Tcl_Init], [
+        have_tcl_lib=yes
+        TCL_LIBS="-ltcl$ver -lm -lpthread"
+        TCL_VERSION_DETECTED="$ver"
+        break
+      ])
+    done
+  fi
 
   AC_CHECK_HEADER([tcl.h], [have_tcl_hdr=yes], [
     AC_MSG_WARN([tcl.h not found; Tcl scripting disabled])
@@ -52,7 +103,6 @@ AS_IF([test "x$enable_tcl" = "xyes"], [
     AC_DEFINE([USE_TCL], [1], [Define if using Tcl scripting])
     USE_TCL_CPPFLAGS="-DUSE_TCL"
   ], [
-    AC_MSG_WARN([Tcl scripting support disabled])
     enable_tcl=no
     TCL_LIBS=""
     USE_TCL_CPPFLAGS=""
